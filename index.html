@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IEM Robotics Chatbot</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        #chatbot-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #0084FF 0%, #0056b3 100%);
+            color: #fff;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 28px;
+            z-index: 9999;
+            box-shadow: 0 4px 12px rgba(0, 132, 255, 0.4);
+            transition: transform 0.2s;
+        }
+
+        #chatbot-button:hover {
+            transform: scale(1.1);
+        }
+
+        #chatbot-box {
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            width: 380px;
+            max-width: calc(100vw - 40px);
+            height: 550px;
+            background: #fff;
+            border-radius: 16px;
+            display: none;
+            flex-direction: column;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            z-index: 9999;
+            overflow: hidden;
+        }
+
+        #chatbot-header {
+            background: linear-gradient(135deg, #0084FF 0%, #0056b3 100%);
+            padding: 16px;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+
+        #header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        #header-hook {
+            font-size: 11px;
+            opacity: 0.9;
+            font-style: italic;
+        }
+
+        #close-btn {
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Quick Options Screen */
+        #quick-options-screen {
+            flex: 1;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            background: #f8f9fa;
+            overflow-y: auto;
+        }
+
+        #quick-options-screen h3 {
+            color: #212529;
+            margin-bottom: 8px;
+            font-size: 18px;
+            text-align: center;
+        }
+
+        #quick-options-screen p {
+            color: #6c757d;
+            margin-bottom: 24px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .option-btn {
+            width: 100%;
+            padding: 14px 16px;
+            margin-bottom: 12px;
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #212529;
+            transition: all 0.2s;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .option-btn:hover {
+            border-color: #0084FF;
+            background: #f0f8ff;
+            transform: translateY(-2px);
+        }
+
+        .option-btn .icon {
+            font-size: 20px;
+            min-width: 24px;
+        }
+
+        /* Welcome Form Styles - Inline Card */
+        #welcome-form-container {
+            padding: 16px;
+            display: none;
+            flex-direction: column;
+            background: #fff;
+            border-radius: 12px;
+            margin: 10px 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e9ecef;
+            width: 90%;
+            align-self: flex-start;
+        }
+
+        #welcome-form-container h3 {
+            color: #212529;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        #welcome-form-container p {
+            color: #6c757d;
+            margin-bottom: 16px;
+            font-size: 13px;
+        }
+
+        .back-btn {
+            background: transparent;
+            border: none;
+            color: #0084FF;
+            font-size: 13px;
+            cursor: pointer;
+            margin-bottom: 12px;
+            text-align: left;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .back-btn:hover {
+            text-decoration: underline;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 4px;
+            color: #495057;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 13px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            border-color: #0084FF;
+        }
+
+        .form-group input::placeholder,
+        .form-group textarea::placeholder {
+            color: #adb5bd;
+        }
+
+        #start-chat-btn {
+            width: 100%;
+            padding: 10px;
+            background: #0084FF;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 4px;
+        }
+
+        #start-chat-btn:hover {
+            background: #0056b3;
+        }
+
+        .error-message {
+            color: #dc3545;
+            font-size: 11px;
+            margin-top: 2px;
+            display: none;
+        }
+
+        /* Chat Interface Styles */
+        #chat-interface {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+            height: 100%;
+            min-height: 0;
+            position: relative;
+        }
+
+        #chat-messages {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            background: #f8f9fa;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message {
+            margin-bottom: 12px;
+            display: flex;
+            gap: 8px;
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message-content {
+            max-width: 85%;
+            padding: 10px 14px;
+            border-radius: 12px;
+            word-wrap: break-word;
+            line-height: 1.5;
+            font-size: 14px;
+        }
+
+        .message.bot .message-content {
+            background: #e9ecef;
+            color: #212529;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message.bot .message-content strong {
+            font-weight: 600;
+            color: #0056b3;
+        }
+
+        .message.user .message-content {
+            background: #0084FF;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        #chat-input-container {
+            padding: 12px 16px;
+            background: white;
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        #chat-input {
+            flex: 1;
+            padding: 10px 14px;
+            border: 1px solid #dee2e6;
+            border-radius: 20px;
+            outline: none;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        #chat-input:focus {
+            border-color: #0084FF;
+        }
+
+        #send-btn {
+            background: #0084FF;
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: background 0.2s;
+        }
+
+        #send-btn:hover {
+            background: #0056b3;
+        }
+
+        .typing-indicator {
+            display: none;
+            padding: 10px 14px;
+            background: #e9ecef;
+            border-radius: 12px;
+            width: fit-content;
+            margin-bottom: 12px;
+        }
+
+        .typing-indicator span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #6c757d;
+            margin: 0 2px;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+
+            0%,
+            60%,
+            100% {
+                transform: translateY(0);
+            }
+
+            30% {
+                transform: translateY(-10px);
+            }
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 480px) {
+            #chatbot-box {
+                width: 100%;
+                height: 100%;
+                max-width: 100%;
+                bottom: 0;
+                right: 0;
+                border-radius: 0;
+            }
+
+            #chatbot-button {
+                bottom: 20px;
+                right: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Chatbot Button -->
+    <div id="chatbot-button">🤖</div>
+
+    <!-- Chatbot Window -->
+    <div id="chatbot-box">
+        <div id="chatbot-header">
+            <div id="header-top">
+                <span>🤖 IEM Robotics Support</span>
+                <button id="close-btn">×</button>
+            </div>
+            <div id="header-hook">🔥 Let’s turn curiosity into creation!</div>
+        </div>
+
+        <!-- Quick Options Screen -->
+        <div id="quick-options-screen">
+            <h3>How can we help you?</h3>
+            <p>Select an option to proceed</p>
+
+            <button class="option-btn" onclick="handleOptionClick('atl')">
+                <span class="icon">🔬</span>
+                <span>ATL Lab Setup & Support</span>
+            </button>
+
+            <button class="option-btn" onclick="handleOptionClick('stem')">
+                <span class="icon">📦</span>
+                <span>Interested in STEM & Science Kits</span>
+            </button>
+
+            <button class="option-btn" onclick="handleOptionClick('refill')">
+                <span class="icon">🔧</span>
+                <span>Robotics Lab Refilling & Workshops</span>
+            </button>
+
+            <button class="option-btn" onclick="handleOptionClick('school')">
+                <span class="icon">🏫</span>
+                <span>School Enquiry</span>
+            </button>
+
+            <button class="option-btn" onclick="handleOptionClick('other')">
+                <span class="icon">💬</span>
+                <span>Other Queries</span>
+            </button>
+        </div>
+
+        <!-- Chat Interface -->
+        <div id="chat-interface">
+            <div id="chat-messages">
+                <div class="typing-indicator">
+                    <span></span><span></span><span></span>
+                </div>
+            </div>
+
+            <div id="chat-input-container">
+                <input type="text" id="chat-input" placeholder="Type your question..." />
+                <button id="send-btn">➤</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden Form Container (will be moved to chat) -->
+    <div id="welcome-form-container">
+        <button class="back-btn" onclick="closeForm()">Cancel Enquiry</button>
+
+        <h3>Please provide details</h3>
+        <p>So our team can assist you better</p>
+
+        <form id="user-info-form">
+            <div class="form-group">
+                <label for="user-name">Name *</label>
+                <input type="text" id="user-name" placeholder="Enter your name" required>
+                <span class="error-message" id="name-error">Please enter your name</span>
+            </div>
+
+            <div class="form-group">
+                <label for="user-email">Email *</label>
+                <input type="email" id="user-email" placeholder="your@email.com" required>
+                <span class="error-message" id="email-error">Please enter a valid email</span>
+            </div>
+
+            <div class="form-group">
+                <label for="user-phone">Phone Number *</label>
+                <input type="tel" id="user-phone" placeholder="+91 XXXXXXXXXX" required>
+                <span class="error-message" id="phone-error">Please enter a valid phone number</span>
+            </div>
+
+            <!-- Dynamic Fields -->
+            <div id="school-fields" style="display: none;">
+                <div class="form-group">
+                    <label for="school-name">School Name</label>
+                    <input type="text" id="school-name" placeholder="Enter school name">
+                </div>
+                <div class="form-group">
+                    <label for="city-state">City & State</label>
+                    <input type="text" id="city-state" placeholder="e.g. Kolkata, West Bengal">
+                </div>
+                <div class="form-group">
+                    <label for="requirement">Requirement</label>
+                    <select id="requirement">
+                        <option value="">Select Requirement</option>
+                        <option value="Lab Setup">Lab Setup</option>
+                        <option value="Refilling">Refilling</option>
+                        <option value="Workshop">Workshop</option>
+                        <option value="Kits Purchase">Kits Purchase</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="other-fields" style="display: none;">
+                <div class="form-group">
+                    <label for="query-text">Your Query</label>
+                    <textarea id="query-text" placeholder="Please write your query in detail..."></textarea>
+                </div>
+            </div>
+
+            <button type="submit" id="start-chat-btn">Submit</button>
+        </form>
+    </div>
+
+    <script>
+        // DOM Elements
+        const chatButton = document.getElementById("chatbot-button");
+        const chatBox = document.getElementById("chatbot-box");
+        const closeBtn = document.getElementById("close-btn");
+        const quickOptionsScreen = document.getElementById("quick-options-screen");
+        const chatInterface = document.getElementById("chat-interface");
+        const chatMessages = document.getElementById("chat-messages");
+        const welcomeForm = document.getElementById("welcome-form-container");
+        const userInfoForm = document.getElementById("user-info-form");
+        const typingIndicator = document.querySelector(".typing-indicator");
+        const chatInput = document.getElementById("chat-input");
+        const sendBtn = document.getElementById("send-btn");
+        const headerHook = document.getElementById("header-hook");
+
+        // Hook Lines
+        const hooks = [
+            "🔥 Let’s turn curiosity into creation!",
+            "✨ Innovation begins here.",
+            "🤖 The future of innovation starts with you!",
+            "🚀 Smarter STEM learning with IEM Robotics!"
+        ];
+
+        // State
+        let currentOption = "";
+        let isFormSubmitted = false;
+
+        // Initialize
+        headerHook.textContent = hooks[Math.floor(Math.random() * hooks.length)];
+
+        // Toggle Chatbot
+        chatButton.onclick = () => {
+            const isHidden = chatBox.style.display === "none" || chatBox.style.display === "";
+            chatBox.style.display = isHidden ? "flex" : "none";
+        };
+
+        closeBtn.onclick = () => {
+            chatBox.style.display = "none";
+        };
+
+        // Handle Option Click
+        function handleOptionClick(option) {
+            currentOption = option;
+            quickOptionsScreen.style.display = "none";
+            chatInterface.style.display = "flex";
+
+            // Ensure form is hidden initially (it might be in the DOM)
+            welcomeForm.style.display = "none";
+
+            // 1. User Message
+            let userMsg = "";
+            let botAns = "";
+            let nextAns = "";
+
+            switch (option) {
+                case 'atl':
+                    userMsg = "ATL Lab Setup & Support";
+                    botAns = "Thank you for your interest in ATL (Atal Tinkering Lab) setup with IEM Robotics. We provide complete lab setup, robotics tools, sensors, modules, teacher training & student workshops.";
+                    nextAns = "Please share your Name, Email and Contact Number so our team can assist you.";
+                    break;
+                case 'stem':
+                    userMsg = "Interested in STEM & Science Kits";
+                    botAns = "Great! We offer a wide range of STEM & Science Kits for kids and students (6+ years) including robotics, solar kits and DIY learning kits.";
+                    nextAns = "Please share your Name, Email and Contact Number to receive catalog & pricing details.";
+                    break;
+                case 'refill':
+                    userMsg = "Robotics Lab Refilling & Workshops";
+                    botAns = "We provide refilling for robotics labs, educational parts, sensors, Arduino, motors, tools & training workshops for students and teachers.";
+                    nextAns = "Please share your Name, Email and Contact Number to proceed.";
+                    break;
+                case 'school':
+                    userMsg = "School Enquiry";
+                    botAns = "Thank you for your interest in our School STEM/Robotics/ATL services. Please provide your school details.";
+                    nextAns = "Great! Now please share your Name, Email and Contact Number so we can contact you.";
+                    break;
+                case 'other':
+                    userMsg = "Other Queries";
+                    botAns = "Please write your query in detail.";
+                    nextAns = "Please share your Name, Email & Contact Number so our support team can assist you.";
+                    break;
+            }
+
+            addMessage(userMsg, true);
+
+            // Show Bot Response with delay
+            showTyping();
+            setTimeout(() => {
+                addMessage(botAns);
+
+                showTyping();
+                setTimeout(() => {
+                    addMessage(nextAns);
+                    hideTyping();
+
+                    // Show Form after bot messages
+                    showForm(option);
+                }, 1000);
+            }, 1000);
+        }
+
+        // Show Form
+        function showForm(option) {
+            // Move form to chat messages
+            chatMessages.appendChild(welcomeForm);
+            welcomeForm.style.display = "flex";
+
+            // Disable chat input while form is active
+            chatInput.disabled = true;
+            sendBtn.disabled = true;
+            chatInput.placeholder = "Please fill the form to continue...";
+
+            // Reset dynamic fields
+            document.getElementById("school-fields").style.display = "none";
+            document.getElementById("other-fields").style.display = "none";
+
+            if (option === 'school') {
+                document.getElementById("school-fields").style.display = "block";
+            } else if (option === 'other') {
+                document.getElementById("other-fields").style.display = "block";
+            }
+
+            scrollToBottom();
+        }
+
+        function closeForm() {
+            welcomeForm.style.display = "none";
+            // Maybe add a message "Enquiry cancelled"
+            addMessage("Enquiry cancelled. You can select another option.", false);
+            setTimeout(() => {
+                chatInterface.style.display = "none";
+                quickOptionsScreen.style.display = "flex";
+                // Re-enable for next time
+                chatInput.disabled = false;
+                sendBtn.disabled = false;
+                chatInput.placeholder = "Type your question...";
+            }, 1000);
+        }
+
+        // Handle Form Submit
+        userInfoForm.onsubmit = async (e) => {
+            e.preventDefault();
+
+            // Basic Validation
+            const name = document.getElementById("user-name").value.trim();
+            const email = document.getElementById("user-email").value.trim();
+            const phone = document.getElementById("user-phone").value.trim();
+
+            if (!name || !email || !phone) return;
+
+            // Prepare Data
+            const formData = {
+                name: name,
+                email: email,
+                phone: phone,
+                option: currentOption,
+                school_name: document.getElementById("school-name").value.trim() || null,
+                city_state: document.getElementById("city-state").value.trim() || null,
+                requirement: document.getElementById("requirement").value || null,
+                query: document.getElementById("query-text").value.trim() || null
+            };
+
+            // Send to Backend
+            addMessage("Submitting your enquiry...", false);
+            showTyping();
+            try {
+                const response = await fetch("http://127.0.0.1:8000/api/chat/submit-form", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(formData)
+                });
+
+                if (!response.ok) {
+                    hideTyping();
+                    const errorData = await response.json();
+                    addMessage("Error: " + (errorData.detail || "Submission failed"), false);
+                    return;
+                }
+
+                // Hide Form
+                welcomeForm.style.display = "none";
+                isFormSubmitted = true;
+
+                // Re-enable chat input
+                chatInput.disabled = false;
+                sendBtn.disabled = false;
+                chatInput.placeholder = "Type your question...";
+
+                // Auto Response based on Option
+                let autoResponse = "";
+                switch (currentOption) {
+                    case 'atl': autoResponse = "📌 Thank you! Our team will share ATL lab setup details soon."; break;
+                    case 'stem': autoResponse = "📦 Thanks! We'll send kit catalog & prices shortly."; break;
+                    case 'refill': autoResponse = "🔧 Thank you! We'll share refilling & workshop options."; break;
+                    case 'school': autoResponse = "🏫 Great! We'll get back with tailored school solutions."; break;
+                    case 'other': autoResponse = "✉️ Thank you! We'll respond to your query shortly."; break;
+                }
+
+                // Removed showTyping() from here as it's already at the start of try block
+                setTimeout(() => {
+                    addMessage(autoResponse);
+                    hideTyping();
+
+                    // Enable Chat Input for further questions
+                    addMessage("You can now ask me anything else about IEM Robotics!");
+                }, 800);
+
+            } catch (error) {
+                console.error("Submission Error:", error);
+                hideTyping();
+                addMessage("Failed to submit form. Please try again.", false);
+            }
+        };
+
+        // Helper Functions
+        function addMessage(text, isUser = false) {
+            const msgDiv = document.createElement("div");
+            msgDiv.className = `message ${isUser ? 'user' : 'bot'}`;
+            msgDiv.innerHTML = `<div class="message-content">${formatText(text)}</div>`;
+
+    </script>
+</body>
+
+</html>
